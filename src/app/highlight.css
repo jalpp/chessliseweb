@@ -1,0 +1,5 @@
+/* highlight.css */
+.cg-square.highlight-square {
+    background: radial-gradient(circle at center, rgba(255, 200, 0, 0.6) 40%, transparent 80%);
+  }
+  

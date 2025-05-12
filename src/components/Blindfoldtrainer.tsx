@@ -205,19 +205,19 @@ export default function BlindfoldTrainer({ difficulty }: CoordinateTrainerProps)
   };
 
   const boardSize = isMobile
-    ? Math.min(window.innerWidth * 0.9, 360)
+    ? Math.min(window.innerWidth * 0.9, 320)
     : 600;
 
   return (
     <Box sx={{ textAlign: "center", mt: 4, px: 2 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant={isMobile ? "h5" : "h4"} gutterBottom>
         🕶️ Blindfold Trainer
       </Typography>
 
       {!started && !gameOver ? (
         <>
-          <Paper elevation={3} sx={{ p: 3, mx: "auto", maxWidth: 600, mb: 4 }}>
-            <Typography variant="body1" sx={{ mb: 2 }}>
+          <Paper elevation={3} sx={{ p: 2, mx: "auto", maxWidth: 600, mb: 4 }}>
+            <Typography variant="body2" sx={{ mb: 2 }}>
               Memorize the board. After a few seconds, it disappears. Identify
               the piece's square!
             </Typography>
@@ -227,7 +227,7 @@ export default function BlindfoldTrainer({ difficulty }: CoordinateTrainerProps)
               {difficulty === "hard" && "🔴 Hard: Board hides after 5s"}
             </Alert>
           </Paper>
-          <Button variant="contained" size="large" onClick={startGame}>
+          <Button variant="contained" size="large" onClick={startGame} fullWidth={isMobile}>
             Start Game
           </Button>
         </>
@@ -260,10 +260,10 @@ export default function BlindfoldTrainer({ difficulty }: CoordinateTrainerProps)
             justifyContent="center"
             alignItems="center"
           >
-            <Button variant="contained" onClick={startGame}>
+            <Button variant="contained" onClick={startGame} fullWidth={isMobile}>
               Try Again
             </Button>
-            <Button variant="outlined" color="secondary" href="/">
+            <Button variant="outlined" color="secondary" href="/" fullWidth={isMobile}>
               Home
             </Button>
           </Stack>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Chess, Color, PieceSymbol } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import {
@@ -19,6 +19,7 @@ import { keyframes } from "@emotion/react";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
+import {Fade} from "@mui/material";
 
 type Difficulty = "easy" | "medium" | "hard";
 
@@ -26,84 +27,70 @@ interface CoordinateTrainerProps {
   difficulty: Difficulty;
 }
 
+const allFiles = ["a", "b", "c", "d", "e", "f", "g", "h"];
+const allRanks = ["1", "2", "3", "4", "5", "6", "7", "8"];
+const pieceTypes = ["p", "k", "n", "b", "q", "r"];
+const side = ["b", "w"];
+
+const getRandomSquare = (): string =>
+  allFiles[Math.floor(Math.random() * 8)] + allRanks[Math.floor(Math.random() * 8)];
+
+const getRandomPiece = (): PieceSymbol =>
+  pieceTypes[Math.floor(Math.random() * pieceTypes.length)] as PieceSymbol;
+
+const getRandomColor = (): Color =>
+  side[Math.floor(Math.random() * side.length)] as Color;
+
+const generateOptions = (correct: string): string[] => {
+  const options = new Set([correct]);
+  while (options.size < 4) {
+    options.add(getRandomSquare());
+  }
+  return Array.from(options).sort(() => Math.random() - 0.5);
+};
+
+const getTimeLimit = (difficulty: Difficulty) => {
+  const timeLimits = { easy: 5 * 60, medium: 3 * 60, hard: 60 };
+  return timeLimits[difficulty];
+};
+
+const getPieceCount = (difficulty: Difficulty) => {
+  const pieceCounts = { easy: 1, medium: 2, hard: 5 };
+  return pieceCounts[difficulty];
+};
+
 export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const boardSize = isMobile ? 300 : 600;
-
-  const allFiles = ["a", "b", "c", "d", "e", "f", "g", "h"];
-  const allRanks = ["1", "2", "3", "4", "5", "6", "7", "8"];
-  const pieceTypes = ["p", "k", "n", "b", "q", "r"];
-  const side = ["b", "w"];
-
-  const getRandomSquare = (): string =>
-    allFiles[Math.floor(Math.random() * 8)] + allRanks[Math.floor(Math.random() * 8)];
-
-  const getRandomPiece = (): PieceSymbol =>
-    pieceTypes[Math.floor(Math.random() * pieceTypes.length)] as PieceSymbol;
-
-  const getRandomColor = (): Color =>
-    side[Math.floor(Math.random() * side.length)] as Color;
-
-  const generateOptions = (correct: string): string[] => {
-    const options = new Set([correct]);
-    while (options.size < 4) {
-      options.add(getRandomSquare());
-    }
-    return Array.from(options).sort(() => 0.5 - Math.random());
-  };
-
-  const getTimeLimit = () => {
-    switch (difficulty) {
-      case "easy":
-        return 5 * 60;
-      case "medium":
-        return 3 * 60;
-      case "hard":
-        return 60;
-    }
-  };
-
-  const getPieceCount = () => {
-    switch (difficulty) {
-      case "easy":
-        return 1;
-      case "medium":
-        return 2;
-      case "hard":
-        return 5;
-    }
-  };
 
   const [targetSquare, setTargetSquare] = useState<string>("");
   const [options, setOptions] = useState<string[]>([]);
   const [fen, setFen] = useState<string>("");
   const [feedback, setFeedback] = useState<string | null>(null);
   const [started, setStarted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(getTimeLimit());
+  const [timeLeft, setTimeLeft] = useState(getTimeLimit(difficulty));
   const [correct, setCorrect] = useState(0);
   const [incorrect, setIncorrect] = useState(0);
+  const [fade, setFade] = useState(false);
 
-  const gameOver = !started && timeLeft === 0;
+  const gameOver = useMemo(() => !started && timeLeft === 0, [started, timeLeft]);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (started && timeLeft > 0) {
-      timer = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0) {
-      setStarted(false);
-      setFeedback("⏰ Time is up!");
-    }
+    if (!started || timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
     return () => clearInterval(timer);
   }, [started, timeLeft]);
 
-  const nextPosition = () => {
+  const nextPosition = useCallback(() => {
     const chess = new Chess();
     chess.clear();
 
-    const pieceCount = getPieceCount();
+    const pieceCount = getPieceCount(difficulty);
     const usedSquares = new Set<string>();
     let chosenTarget = "";
 
@@ -127,27 +114,30 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
     setTargetSquare(chosenTarget);
     setOptions(generateOptions(chosenTarget));
     setFeedback(null);
-  };
+    setFade(true);
+  }, [difficulty]);
 
-  const handleAnswer = (selected: string) => {
-    if (selected === targetSquare) {
-      setCorrect((c) => c + 1);
-      setFeedback("✅ Correct!");
+  const handleAnswer = useCallback(
+    (selected: string) => {
+      if (selected === targetSquare) {
+        setCorrect((c) => c + 1);
+        setFeedback("✅ Correct!");
+      } else {
+        setIncorrect((i) => i + 1);
+        setFeedback("❌ Try again.");
+      }
       setTimeout(nextPosition, 400);
-    } else {
-      setIncorrect((i) => i + 1);
-      setFeedback("❌ Try again.");
-      setTimeout(nextPosition, 400);
-    }
-  };
+    },
+    [targetSquare, nextPosition]
+  );
 
-  const startGame = () => {
+  const startGame = useCallback(() => {
     setCorrect(0);
     setIncorrect(0);
-    setTimeLeft(getTimeLimit());
+    setTimeLeft(getTimeLimit(difficulty));
     setStarted(true);
     nextPosition();
-  };
+  }, [difficulty, nextPosition]);
 
   const highlightAnimation = keyframes`
     0% { transform: scale(1); }
@@ -155,16 +145,19 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
     100% { transform: scale(1); }
   `;
 
-  const highlightStyles = started
-    ? {
-        [targetSquare]: {
-          background:
-            "radial-gradient(circle, #8413F0 40%, transparent 70%)",
-          borderRadius: "50%",
-          animation: `${highlightAnimation} 0.8s ease-out`,
-        },
-      }
-    : {};
+  const highlightStyles = useMemo(
+    () =>
+      started
+        ? {
+            [targetSquare]: {
+              background: "radial-gradient(circle, #8413F0 40%, transparent 70%)",
+              borderRadius: "50%",
+              animation: `${highlightAnimation} 0.8s ease-out`,
+            },
+          }
+        : {},
+    [started, targetSquare, highlightAnimation]
+  );
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, "0");
@@ -248,33 +241,36 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
             </Stack>
             <LinearProgress
               variant="determinate"
-              value={(timeLeft / getTimeLimit()) * 100}
+              value={(timeLeft / getTimeLimit(difficulty)) * 100}
               sx={{ mt: 2, height: 8, borderRadius: 5 }}
               color="info"
             />
             {feedback && (
               <Typography
-                variant="h6"
-                sx={{
-                  mt: 3,
-                  color: feedback.includes("Correct") ? "green" : "red",
-                  animation: `fadeIn 1s ease-out`,
-                }}
+          variant="h6"
+          sx={{
+            mt: 3,
+            color: feedback.includes("Correct") ? "green" : "red",
+            animation: `fadeIn 1s ease-out`,
+          }}
               >
-                {feedback}
+          {feedback}
               </Typography>
             )}
           </Box>
 
-          <Box sx={{ width: boardSize, height: boardSize, margin: "0 auto" }}>
-            <Chessboard
-              position={fen}
-              boardWidth={boardSize}
-              arePiecesDraggable={false}
-              customSquareStyles={highlightStyles}
-              customNotationStyle={{ fontSize: "1px" }}
-            />
-          </Box>
+          <Fade in={fade} timeout={800} unmountOnExit>
+            <Box sx={{ width: boardSize, height: boardSize, margin: "0 auto" }}>
+              <Chessboard
+          position={fen}
+          boardWidth={boardSize}
+          arePiecesDraggable={false}
+          customSquareStyles={highlightStyles}
+          customNotationStyle={{ fontSize: "1px" }}
+          animationDuration={1}
+              />
+            </Box>
+          </Fade>
 
           <Stack
             spacing={2}
@@ -285,21 +281,21 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
           >
             {options.map((opt) => (
               <Button
-                key={opt}
-                variant="contained"
-                onClick={() => handleAnswer(opt)}
-                color="primary"
-                fullWidth={isMobile}
-                sx={{
-                  px: 4,
-                  py: 1,
-                  animation: `${buttonHoverAnimation} 0.3s ease-in-out`,
-                  "&:hover": {
-                    animation: `${buttonHoverAnimation} 0.3s ease-out`,
-                  },
-                }}
+          key={opt}
+          variant="contained"
+          onClick={() => handleAnswer(opt)}
+          color="primary"
+          fullWidth={isMobile}
+          sx={{
+            px: 4,
+            py: 1,
+            animation: `${buttonHoverAnimation} 0.3s ease-in-out`,
+            "&:hover": {
+              animation: `${buttonHoverAnimation} 0.3s ease-out`,
+            },
+          }}
               >
-                {opt.toUpperCase()}
+          {opt.toUpperCase()}
               </Button>
             ))}
           </Stack>

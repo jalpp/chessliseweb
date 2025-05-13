@@ -16,7 +16,9 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import { FaDiscord } from "react-icons/fa";
+import { MdAttachMoney } from "react-icons/md"; // Import donation icon
 import { useState } from "react";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 
 export default function Navbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -37,11 +39,18 @@ export default function Navbar() {
   const iconLinks = [
     {
       icon: <GitHubIcon />,
-      href: "https://github.com/jalpp/chessliseweb",
+      href: "https://github.com/jalpp/Chesslise",
+      name: "Github"
     },
     {
       icon: <FaDiscord />,
-      href: "https://discord.gg/YOUR_DISCORD",
+      href: "https://discord.gg/T2eH3tQjKC",
+      name: "Discord",
+    },
+    {
+      icon: <FavoriteIcon/>,
+      href: "https://buymeacoffee.com/chesslise",
+      name: "Donate"
     },
   ];
 
@@ -64,6 +73,7 @@ export default function Navbar() {
                   {link.label}
                 </Button>
               ))}
+              {/* Donate button */}
               {iconLinks.map((link, idx) => (
                 <IconButton
                   key={idx}
@@ -122,7 +132,7 @@ export default function Navbar() {
                 }}
               >
                 <ListItemText
-                  primary={link.href.includes("github") ? "GitHub" : "Discord"}
+                  primary={link.name}
                 />
               </ListItem>
             ))}

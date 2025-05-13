@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Chess, Color, PieceSymbol, Square } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import Fade from "@mui/material/Fade";
@@ -16,10 +16,11 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { keyframes, css } from "@emotion/react";
+import { keyframes } from "@emotion/react";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
+import ShareIcon from "@mui/icons-material/Share";
 
 type Difficulty = "easy" | "medium" | "hard";
 
@@ -82,7 +83,7 @@ export default function BlindfoldTrainer({ difficulty }: CoordinateTrainerProps)
       case "medium":
         return 7;
       case "hard":
-        return 2;
+        return 5;
     }
   };
 
@@ -96,8 +97,19 @@ export default function BlindfoldTrainer({ difficulty }: CoordinateTrainerProps)
   const [correct, setCorrect] = useState(0);
   const [incorrect, setIncorrect] = useState(0);
   const [hideCountdown, setHideCountdown] = useState(getHideDelay());
+  const [copiedText, setCopiedText] = useState<string>("");
 
   const gameOver = !started && timeLeft === 0;
+  
+  const totalAttempts = useMemo(() => correct + incorrect, [correct, incorrect]);
+  const correctPercentage = useMemo(() => 
+    totalAttempts > 0 ? Math.round((correct / totalAttempts) * 100) : 0, 
+    [correct, totalAttempts]
+  );
+  const incorrectPercentage = useMemo(() => 
+    totalAttempts > 0 ? Math.round((incorrect / totalAttempts) * 100) : 0,
+    [incorrect, totalAttempts]
+  );
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -177,7 +189,45 @@ export default function BlindfoldTrainer({ difficulty }: CoordinateTrainerProps)
     setIncorrect(0);
     setTimeLeft(getTimeLimit());
     setStarted(true);
+    setCopiedText("");
     nextPosition();
+  };
+  
+  const formatDifficulty = (diff: Difficulty) => {
+    return diff.charAt(0).toUpperCase() + diff.slice(1);
+  };
+  
+  const handleShare = async () => {
+    const shareText = `Chesslise blindfold challenge!\n${correctPercentage}% right\n${incorrectPercentage}% wrong\nI got ${correct} correct out of ${totalAttempts} in ${formatDifficulty(difficulty)} mode!`;
+    
+    try {
+      // Try to use the clipboard API
+      await navigator.clipboard.writeText(shareText);
+      setCopiedText(shareText);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      
+      // Fallback method for browsers with restricted clipboard access
+      const textArea = document.createElement('textarea');
+      textArea.value = shareText;
+      textArea.style.position = 'fixed';  // Avoid scrolling to bottom
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+          setCopiedText(shareText);
+        } else {
+          console.error('Fallback: Unable to copy');
+        }
+      } catch (err) {
+        console.error('Fallback: Unable to copy', err);
+      }
+      
+      document.body.removeChild(textArea);
+    }
   };
 
   const highlightAnimation = keyframes`
@@ -211,7 +261,7 @@ export default function BlindfoldTrainer({ difficulty }: CoordinateTrainerProps)
   return (
     <Box sx={{ textAlign: "center", mt: 4, px: 2 }}>
       <Typography variant={isMobile ? "h5" : "h4"} gutterBottom>
-        🕶️ Blindfold Trainer
+        Blindfold Trainer
       </Typography>
 
       {!started && !gameOver ? (
@@ -236,24 +286,65 @@ export default function BlindfoldTrainer({ difficulty }: CoordinateTrainerProps)
           <Alert severity="warning" sx={{ mb: 3 }}>
             ⏰ Time's up!
           </Alert>
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={2}
-            justifyContent="center"
-            alignItems="center"
-            mb={2}
-          >
-            <Chip
-              label={`Correct: ${correct}`}
-              color="success"
-              icon={<CheckCircleIcon />}
-            />
-            <Chip
-              label={`Incorrect: ${incorrect}`}
-              color="error"
-              icon={<CancelIcon />}
-            />
-          </Stack>
+          
+          <Paper elevation={3} sx={{ p: 3, mx: "auto", maxWidth: 600, mb: 4 }}>
+            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
+              Your Results
+            </Typography>
+            
+            <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-around', mb: 2 }}>
+              <Box>
+                <Typography variant="h6">Total Attempts:</Typography>
+                <Typography variant="h4" sx={{ fontWeight: 'bold' }}>{totalAttempts}</Typography>
+              </Box>
+              
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: isMobile ? 2 : 0 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CheckCircleIcon color="success" />
+                  <Typography variant="body1">
+                    <strong>{correct}</strong> correct ({correctPercentage}%)
+                  </Typography>
+                </Box>
+                
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CancelIcon color="error" />
+                  <Typography variant="body1">
+                    <strong>{incorrect}</strong> incorrect ({incorrectPercentage}%)
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+            
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+              Copy to share your results
+            </Typography>
+            
+            <Button 
+              variant="contained" 
+              color="primary" 
+              startIcon={<ShareIcon />}
+              onClick={handleShare}
+              sx={{ mt: 1 }}
+            >
+              Copy Results
+            </Button>
+            
+            {copiedText && (
+              <Paper 
+                elevation={1} 
+                sx={{ 
+                  mt: 3, 
+                  p: 2, 
+                  whiteSpace: 'pre-line'
+                }}
+              >
+                <Typography variant="body2" fontFamily="monospace">
+                  {copiedText}
+                </Typography>
+              </Paper>
+            )}
+          </Paper>
+          
           <Stack
             direction={{ xs: "column", sm: "row" }}
             spacing={2}

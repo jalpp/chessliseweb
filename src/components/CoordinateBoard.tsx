@@ -194,16 +194,16 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
     const shareText = `Chesslise coordinates challenge!\n${correctPercentage}% right\n${incorrectPercentage}% wrong\nI got ${correct} correct out of ${totalAttempts} in ${formatDifficulty(difficulty)} mode!`;
     
     try {
-      // Try to use the clipboard API
+      
       await navigator.clipboard.writeText(shareText);
       setCopiedText(shareText);
     } catch (err) {
       console.error('Failed to copy text: ', err);
       
-      // Fallback method for browsers with restricted clipboard access
+     
       const textArea = document.createElement('textarea');
       textArea.value = shareText;
-      textArea.style.position = 'fixed';  // Avoid scrolling to bottom
+      textArea.style.position = 'fixed';  
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
@@ -241,8 +241,8 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
             </Typography>
             <Alert severity="info">
               {difficulty === "easy" && "🟢 5 minutes • 1 piece at a time"}
-              {difficulty === "medium" && "🟡 3 minutes • 2 pieces shown"}
-              {difficulty === "hard" && "🔴 1 minute • 5 pieces shown"}
+              {difficulty === "medium" && "🟡 3 minutes • 5 pieces shown"}
+              {difficulty === "hard" && "🔴 1 minute • 8 pieces shown"}
             </Alert>
           </Paper>
           <Button

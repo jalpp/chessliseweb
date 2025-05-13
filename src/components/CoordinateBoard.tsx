@@ -15,7 +15,6 @@ import {
   Paper,
   useMediaQuery,
   useTheme,
-  Snackbar,
 } from "@mui/material";
 import { keyframes } from "@emotion/react";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";

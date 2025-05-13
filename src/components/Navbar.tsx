@@ -16,7 +16,6 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import { FaDiscord } from "react-icons/fa";
-import { MdAttachMoney } from "react-icons/md"; // Import donation icon
 import { useState } from "react";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 

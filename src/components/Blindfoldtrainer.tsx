@@ -254,7 +254,7 @@ export default function BlindfoldTrainer({ difficulty }: CoordinateTrainerProps)
           <Paper elevation={3} sx={{ p: 2, mx: "auto", maxWidth: 600, mb: 4 }}>
             <Typography variant="body2" sx={{ mb: 2 }}>
               Memorize the board. After a few seconds, it disappears. Identify
-              the piece's square! Note: the board point of view is from white side
+              square location of the piece Note: the board point of view is from white side
             </Typography>
             <Alert severity="info">
               {difficulty === "easy" && "🟢 Easy: Board hides after 10s"}
@@ -269,7 +269,7 @@ export default function BlindfoldTrainer({ difficulty }: CoordinateTrainerProps)
       ) : gameOver ? (
         <>
           <Alert severity="warning" sx={{ mb: 3 }}>
-            ⏰ Time's up!
+            ⏰ Time is up!
           </Alert>
           
           <Paper elevation={3} sx={{ p: 3, mx: "auto", maxWidth: 600, mb: 4 }}>

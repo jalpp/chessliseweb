@@ -115,7 +115,7 @@ export default function HomePage() {
             fontWeight={400}
             sx={{ maxWidth: 530, fontSize: { xs: "1.1rem", md: "1.4rem" } }}
           >
-            Chesslise is a community-driven, open-source chess bot designed to bring the ultimate chess experience to Discord. Whether you're looking to play, learn, or spectate, Chesslise makes it seamless—all within your Discord server, Group DMs, or friend chat rooms.
+            Chesslise is a community-driven, open-source chess bot designed to bring the ultimate chess experience to Discord. Chesslise makes it seamless—all within your Discord server, Group DMs, or friend chat rooms.
 
           </Typography>
           <Button

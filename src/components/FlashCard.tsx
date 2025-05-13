@@ -36,7 +36,7 @@ const FlashCardPage: React.FC = () => {
   const handleGenerate = () => {
     const cleanedPGN = pgn.replace(/\{[^}]*clk[^}]*\}/gi, "").trim();
     const chess = new Chess();
-    const ok = chess.loadPgn(cleanedPGN);
+    chess.loadPgn(cleanedPGN);
     const comments = chess.getComments();
     setCards(comments);
     setCurrent(0);

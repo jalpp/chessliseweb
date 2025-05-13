@@ -13,7 +13,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
 import BlindfoldTrainer from "@/components/Blindfoldtrainer";
-import { useTheme } from "@emotion/react";
+
 
 const blindfoldDifficultySettings = [
   {

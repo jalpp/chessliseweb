@@ -15,7 +15,6 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 const discordPurple = "#5865F2";
-const discordDark = "#2C2F33";
 const discordLight = "#b9bbbe";
 
 const commands = [

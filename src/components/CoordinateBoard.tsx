@@ -246,7 +246,7 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
       ) : gameOver ? (
         <>
           <Alert severity="warning" sx={{ mb: 3 }}>
-            ⏰ Time's up!
+            ⏰ Time is up!
           </Alert>
           <Paper elevation={3} sx={{ p: 3, mx: "auto", maxWidth: 600, mb: 4 }}>
             <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { Chess, Color, PieceSymbol } from "chess.js";
 import { Chessboard } from "react-chessboard";
+import copy from 'copy-to-clipboard';
 import {
   Box,
   Button,
@@ -190,38 +191,22 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
     100% { transform: scale(1.1); }
   `;
 
-  const handleShare = async () => {
-    const shareText = `Chesslise coordinates challenge!\n${correctPercentage}% right\n${incorrectPercentage}% wrong\nI got ${correct} correct out of ${totalAttempts} in ${formatDifficulty(difficulty)} mode!`;
+  const handleShare = () => {
+  const shareText = `Chesslise coordinates challenge!\n${correctPercentage}% right\n${incorrectPercentage}% wrong\nI got ${correct} correct out of ${totalAttempts} in ${formatDifficulty(difficulty)} mode!`;
+  
+  try {
+    // Use the copy-to-clipboard library
+    const success = copy(shareText);
     
-    try {
-      
-      await navigator.clipboard.writeText(shareText);
+    if (success) {
       setCopiedText(shareText);
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
-      
-     
-      const textArea = document.createElement('textarea');
-      textArea.value = shareText;
-      textArea.style.position = 'fixed';  
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      
-      try {
-        const successful = document.execCommand('copy');
-        if (successful) {
-          setCopiedText(shareText);
-        } else {
-          console.error('Fallback: Unable to copy');
-        }
-      } catch (err) {
-        console.error('Fallback: Unable to copy', err);
-      }
-      
-      document.body.removeChild(textArea);
+    } else {
+      console.error('Failed to copy text');
     }
-  };
+  } catch (err) {
+    console.error('Copy operation failed:', err);
+  }
+};
 
   const formatDifficulty = (diff: Difficulty) => {
     return diff.charAt(0).toUpperCase() + diff.slice(1);
@@ -237,7 +222,7 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
         <>
           <Paper elevation={3} sx={{ p: 3, mx: "auto", maxWidth: 600, width: "100%", mb: 4 }}>
             <Typography variant="body1" sx={{ mb: 2 }}>
-              A piece will be placed on the board. Your goal is to identify its square.
+              A piece will be placed on the board. Your goal is to identify its square. The board point of view is from white side
             </Typography>
             <Alert severity="info">
               {difficulty === "easy" && "🟢 5 minutes • 1 piece at a time"}
@@ -326,7 +311,7 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
             <Button variant="contained" onClick={startGame}>
               Try Again
             </Button>
-            <Button variant="outlined" color="secondary" href="/">
+            <Button variant="outlined" color="secondary" href="/trainer">
               Home
             </Button>
           </Stack>

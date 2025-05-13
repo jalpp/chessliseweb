@@ -21,6 +21,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ShareIcon from "@mui/icons-material/Share";
+import copy from "copy-to-clipboard";
 
 type Difficulty = "easy" | "medium" | "hard";
 
@@ -197,36 +198,20 @@ export default function BlindfoldTrainer({ difficulty }: CoordinateTrainerProps)
     return diff.charAt(0).toUpperCase() + diff.slice(1);
   };
   
-  const handleShare = async () => {
-    const shareText = `Chesslise blindfold challenge!\n${correctPercentage}% right\n${incorrectPercentage}% wrong\nI got ${correct} correct out of ${totalAttempts} in ${formatDifficulty(difficulty)} mode!`;
+   const handleShare = () => {
+    const shareText = `Chesslise coordinates challenge!\n${correctPercentage}% right\n${incorrectPercentage}% wrong\nI got ${correct} correct out of ${totalAttempts} in ${formatDifficulty(difficulty)} mode!`;
     
     try {
-      // Try to use the clipboard API
-      await navigator.clipboard.writeText(shareText);
-      setCopiedText(shareText);
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
+      // Use the copy-to-clipboard library
+      const success = copy(shareText);
       
-      // Fallback method for browsers with restricted clipboard access
-      const textArea = document.createElement('textarea');
-      textArea.value = shareText;
-      textArea.style.position = 'fixed';  // Avoid scrolling to bottom
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      
-      try {
-        const successful = document.execCommand('copy');
-        if (successful) {
-          setCopiedText(shareText);
-        } else {
-          console.error('Fallback: Unable to copy');
-        }
-      } catch (err) {
-        console.error('Fallback: Unable to copy', err);
+      if (success) {
+        setCopiedText(shareText);
+      } else {
+        console.error('Failed to copy text');
       }
-      
-      document.body.removeChild(textArea);
+    } catch (err) {
+      console.error('Copy operation failed:', err);
     }
   };
 
@@ -269,7 +254,7 @@ export default function BlindfoldTrainer({ difficulty }: CoordinateTrainerProps)
           <Paper elevation={3} sx={{ p: 2, mx: "auto", maxWidth: 600, mb: 4 }}>
             <Typography variant="body2" sx={{ mb: 2 }}>
               Memorize the board. After a few seconds, it disappears. Identify
-              the piece's square!
+              the piece's square! Note: the board point of view is from white side
             </Typography>
             <Alert severity="info">
               {difficulty === "easy" && "🟢 Easy: Board hides after 10s"}
@@ -354,7 +339,7 @@ export default function BlindfoldTrainer({ difficulty }: CoordinateTrainerProps)
             <Button variant="contained" onClick={startGame} fullWidth={isMobile}>
               Try Again
             </Button>
-            <Button variant="outlined" color="secondary" href="/" fullWidth={isMobile}>
+            <Button variant="outlined" color="secondary" href="/blindfold" fullWidth={isMobile}>
               Home
             </Button>
           </Stack>
@@ -453,6 +438,7 @@ export default function BlindfoldTrainer({ difficulty }: CoordinateTrainerProps)
                   position=""
                   boardWidth={boardSize}
                   arePiecesDraggable={false}
+                  customNotationStyle={{ fontSize: "1px" }}
                 />
                 <Stack
                   spacing={2}

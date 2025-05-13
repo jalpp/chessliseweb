@@ -14,12 +14,14 @@ import {
   Paper,
   useMediaQuery,
   useTheme,
+  Snackbar,
 } from "@mui/material";
 import { keyframes } from "@emotion/react";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import {Fade} from "@mui/material";
+import ShareIcon from "@mui/icons-material/Share";
+import { Fade } from "@mui/material";
 
 type Difficulty = "easy" | "medium" | "hard";
 
@@ -55,7 +57,7 @@ const getTimeLimit = (difficulty: Difficulty) => {
 };
 
 const getPieceCount = (difficulty: Difficulty) => {
-  const pieceCounts = { easy: 1, medium: 2, hard: 5 };
+  const pieceCounts = { easy: 1, medium: 5, hard: 8 };
   return pieceCounts[difficulty];
 };
 
@@ -73,8 +75,20 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
   const [correct, setCorrect] = useState(0);
   const [incorrect, setIncorrect] = useState(0);
   const [fade, setFade] = useState(false);
+  const [copiedText, setCopiedText] = useState<string>("");
+
 
   const gameOver = useMemo(() => !started && timeLeft === 0, [started, timeLeft]);
+  
+  const totalAttempts = useMemo(() => correct + incorrect, [correct, incorrect]);
+  const correctPercentage = useMemo(() => 
+    totalAttempts > 0 ? Math.round((correct / totalAttempts) * 100) : 0, 
+    [correct, totalAttempts]
+  );
+  const incorrectPercentage = useMemo(() => 
+    totalAttempts > 0 ? Math.round((incorrect / totalAttempts) * 100) : 0,
+    [incorrect, totalAttempts]
+  );
 
   useEffect(() => {
     if (!started || timeLeft <= 0) return;
@@ -85,6 +99,12 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
 
     return () => clearInterval(timer);
   }, [started, timeLeft]);
+
+  useEffect(() => {
+    if (timeLeft === 0 && started) {
+      setStarted(false);
+    }
+  }, [timeLeft, started]);
 
   const nextPosition = useCallback(() => {
     const chess = new Chess();
@@ -170,6 +190,43 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
     100% { transform: scale(1.1); }
   `;
 
+  const handleShare = async () => {
+    const shareText = `Chesslise coordinates challenge!\n${correctPercentage}% right\n${incorrectPercentage}% wrong\nI got ${correct} correct out of ${totalAttempts} in ${formatDifficulty(difficulty)} mode!`;
+    
+    try {
+      // Try to use the clipboard API
+      await navigator.clipboard.writeText(shareText);
+      setCopiedText(shareText);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      
+      // Fallback method for browsers with restricted clipboard access
+      const textArea = document.createElement('textarea');
+      textArea.value = shareText;
+      textArea.style.position = 'fixed';  // Avoid scrolling to bottom
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+          setCopiedText(shareText);
+        } else {
+          console.error('Fallback: Unable to copy');
+        }
+      } catch (err) {
+        console.error('Fallback: Unable to copy', err);
+      }
+      
+      document.body.removeChild(textArea);
+    }
+  };
+
+  const formatDifficulty = (diff: Difficulty) => {
+    return diff.charAt(0).toUpperCase() + diff.slice(1);
+  };
+
   return (
     <Box sx={{ textAlign: "center", mt: 4, px: 2 }}>
       <Typography variant="h4" gutterBottom>
@@ -207,16 +264,64 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
           <Alert severity="warning" sx={{ mb: 3 }}>
             ⏰ Time's up!
           </Alert>
-          <Stack
-            direction={isMobile ? "column" : "row"}
-            spacing={2}
-            justifyContent="center"
-            alignItems="center"
-            mb={2}
-          >
-            <Chip label={`Correct: ${correct}`} color="success" icon={<CheckCircleIcon />} />
-            <Chip label={`Incorrect: ${incorrect}`} color="error" icon={<CancelIcon />} />
-          </Stack>
+          <Paper elevation={3} sx={{ p: 3, mx: "auto", maxWidth: 600, mb: 4 }}>
+            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
+              Your Results
+            </Typography>
+            
+            <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-around', mb: 2 }}>
+              <Box>
+                <Typography variant="h6">Total Attempts:</Typography>
+                <Typography variant="h4" sx={{ fontWeight: 'bold' }}>{totalAttempts}</Typography>
+              </Box>
+              
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: isMobile ? 2 : 0 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CheckCircleIcon color="success" />
+                  <Typography variant="body1">
+                    <strong>{correct}</strong> correct ({correctPercentage}%)
+                  </Typography>
+                </Box>
+                
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CancelIcon color="error" />
+                  <Typography variant="body1">
+                    <strong>{incorrect}</strong> incorrect ({incorrectPercentage}%)
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+            
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+              Copy to share your results
+            </Typography>
+            
+            <Button 
+              variant="contained" 
+              color="primary" 
+              startIcon={<ShareIcon />}
+              onClick={handleShare}
+              sx={{ mt: 1 }}
+            >
+              Copy Results
+            </Button>
+            
+            {copiedText && (
+              <Paper 
+                elevation={1} 
+                sx={{ 
+                  mt: 3, 
+                  p: 2, 
+                  whiteSpace: 'pre-line'
+                }}
+              >
+                <Typography variant="body2" fontFamily="monospace">
+                  {copiedText}
+                </Typography>
+              </Paper>
+            )}
+          </Paper>
+          
           <Stack direction={isMobile ? "column" : "row"} spacing={2} justifyContent="center">
             <Button variant="contained" onClick={startGame}>
               Try Again
@@ -225,6 +330,8 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
               Home
             </Button>
           </Stack>
+          
+
         </>
       ) : (
         <>
@@ -247,14 +354,14 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
             />
             {feedback && (
               <Typography
-          variant="h6"
-          sx={{
-            mt: 3,
-            color: feedback.includes("Correct") ? "green" : "red",
-            animation: `fadeIn 1s ease-out`,
-          }}
+                variant="h6"
+                sx={{
+                  mt: 3,
+                  color: feedback.includes("Correct") ? "green" : "red",
+                  animation: `fadeIn 1s ease-out`,
+                }}
               >
-          {feedback}
+                {feedback}
               </Typography>
             )}
           </Box>
@@ -262,12 +369,12 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
           <Fade in={fade} timeout={800} unmountOnExit>
             <Box sx={{ width: boardSize, height: boardSize, margin: "0 auto" }}>
               <Chessboard
-          position={fen}
-          boardWidth={boardSize}
-          arePiecesDraggable={false}
-          customSquareStyles={highlightStyles}
-          customNotationStyle={{ fontSize: "1px" }}
-          animationDuration={1}
+                position={fen}
+                boardWidth={boardSize}
+                arePiecesDraggable={false}
+                customSquareStyles={highlightStyles}
+                customNotationStyle={{ fontSize: "1px" }}
+                animationDuration={1}
               />
             </Box>
           </Fade>
@@ -281,21 +388,21 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
           >
             {options.map((opt) => (
               <Button
-          key={opt}
-          variant="contained"
-          onClick={() => handleAnswer(opt)}
-          color="primary"
-          fullWidth={isMobile}
-          sx={{
-            px: 4,
-            py: 1,
-            animation: `${buttonHoverAnimation} 0.3s ease-in-out`,
-            "&:hover": {
-              animation: `${buttonHoverAnimation} 0.3s ease-out`,
-            },
-          }}
+                key={opt}
+                variant="contained"
+                onClick={() => handleAnswer(opt)}
+                color="primary"
+                fullWidth={isMobile}
+                sx={{
+                  px: 4,
+                  py: 1,
+                  animation: `${buttonHoverAnimation} 0.3s ease-in-out`,
+                  "&:hover": {
+                    animation: `${buttonHoverAnimation} 0.3s ease-out`,
+                  },
+                }}
               >
-          {opt.toUpperCase()}
+                {opt.toUpperCase()}
               </Button>
             ))}
           </Stack>

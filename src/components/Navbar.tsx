@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import GitHubIcon from "@mui/icons-material/GitHub";
-import DiscordIcon from "@mui/icons-material/Forum"; // Discord icon approximation
+import { FaDiscord } from "react-icons/fa";
 import { useState } from "react";
 
 export default function Navbar() {
@@ -37,10 +37,10 @@ export default function Navbar() {
   const iconLinks = [
     {
       icon: <GitHubIcon />,
-      href: "https://github.com/YOUR_GITHUB",
+      href: "https://github.com/jalpp/chessliseweb",
     },
     {
-      icon: <DiscordIcon />,
+      icon: <FaDiscord />,
       href: "https://discord.gg/YOUR_DISCORD",
     },
   ];

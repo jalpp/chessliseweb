@@ -45,10 +45,10 @@ export default function BlindfoldTrainerPage() {
       {!selectedDifficulty ? (
         <>
           <Typography variant="h3" gutterBottom>
-            Welcome to Blindfold Trainer 🕶️
+            Welcome to Blindfold Trainer 
           </Typography>
           <Typography variant="h6" sx={{ mb: 4, maxWidth: 600, mx: "auto" }}>
-            Train your ability to visualize moves without seeing the board. Select a difficulty and begin!
+            Train your ability to maintain your working memory, select a level and start the game!
           </Typography>
 
           <Stack

@@ -25,13 +25,13 @@ const difficultySettings = [
     level: "medium",
     icon: <SportsEsportsIcon fontSize="large" color="primary" />,
     title: "Medium",
-    description: "3 minutes • 2 pieces. A balanced challenge.",
+    description: "3 minutes • 5 pieces. A balanced challenge.",
   },
   {
     level: "hard",
     icon: <WhatshotIcon fontSize="large" color="error" />,
     title: "Hard",
-    description: "1 minute • 5 pieces. For seasoned tacticians!",
+    description: "1 minute • 8 pieces. For seasoned tacticians!",
   },
 ];
 
@@ -43,7 +43,7 @@ export default function TrainerPage() {
       {!selectedDifficulty ? (
         <>
           <Typography variant="h3" gutterBottom>
-            Welcome to Coordinate Trainer 🧠
+            Welcome to Coordinate Trainer 
           </Typography>
           <Typography variant="h6" sx={{ mb: 4, maxWidth: 600, mx: "auto" }}>
             Sharpen your board vision by choosing a difficulty level and identifying piece positions quickly.

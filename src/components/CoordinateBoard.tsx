@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { Chess, Color, PieceSymbol } from "chess.js";
+import { Chess, Color, PieceSymbol, Square } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import copy from 'copy-to-clipboard';
 import {
@@ -123,7 +123,7 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
 
       const piece = getRandomPiece();
       const color = getRandomColor();
-      chess.put({ type: piece, color }, square as any);
+      chess.put({ type: piece, color }, square as Square);
 
       if (i === 0) {
         chosenTarget = square;

@@ -179,7 +179,7 @@ const FlashCardPage: React.FC = () => {
       </Typography>
 
       <Typography variant="h6" mt={4} >
-            Generate cards from PGN annontations to view chess annontations in cards view, download the cards to study them in real
+            Generate cards from PGN annotations to view chess analysis in card format, and download the cards for offline study.
           </Typography>
 
       <TextField

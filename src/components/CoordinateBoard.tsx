@@ -370,7 +370,7 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
             alignItems="center"
             mt={3}
           >
-            {options.map((opt) => (
+            {options.sort().map((opt) => (
               <Button
                 key={opt}
                 variant="contained"
@@ -386,7 +386,7 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
                   },
                 }}
               >
-                {opt.toUpperCase()}
+                {opt.toLocaleLowerCase()}
               </Button>
             ))}
           </Stack>

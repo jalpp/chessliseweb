@@ -447,14 +447,14 @@ export default function BlindfoldTrainer({ difficulty }: CoordinateTrainerProps)
                   alignItems="center"
                   mt={3}
                 >
-                  {options.map((opt) => (
+                  {options.sort().map((opt) => (
                     <Button
                       key={opt}
                       variant="contained"
                       onClick={() => handleAnswer(opt)}
                       fullWidth={isMobile}
                     >
-                      {opt.toUpperCase()}
+                      {opt.toLocaleLowerCase()}
                     </Button>
                   ))}
                 </Stack>

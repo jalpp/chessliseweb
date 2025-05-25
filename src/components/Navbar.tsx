@@ -48,7 +48,7 @@ export default function Navbar() {
     },
     {
       icon: <FavoriteIcon/>,
-      href: "https://buymeacoffee.com/chesslise",
+      href: "https://buymeacoffee.com/jalp",
       name: "Donate"
     },
   ];

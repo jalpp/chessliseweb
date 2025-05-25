@@ -48,7 +48,18 @@ const generateOptions = (correct: string): string[] => {
   while (options.size < 4) {
     options.add(getRandomSquare());
   }
-  return Array.from(options).sort(() => Math.random() - 0.5);
+  // Sort coordinates properly: first by file (a-h), then by rank (1-8)
+  return Array.from(options).sort((a, b) => {
+    const fileA = a[0];
+    const fileB = b[0];
+    const rankA = parseInt(a[1]);
+    const rankB = parseInt(b[1]);
+    
+    if (fileA !== fileB) {
+      return fileA.localeCompare(fileB);
+    }
+    return rankA - rankB;
+  });
 };
 
 const getTimeLimit = (difficulty: Difficulty) => {
@@ -370,7 +381,7 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
             alignItems="center"
             mt={3}
           >
-            {options.sort().map((opt) => (
+            {options.map((opt) => (
               <Button
                 key={opt}
                 variant="contained"

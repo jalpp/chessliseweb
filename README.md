@@ -1,3 +1,21 @@
+# **Chesslise Web**
+
+![GitHub License](https://img.shields.io/github/license/jalpp/Chesslise)
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/jalpp/DojoIcons/dd7365ea7d768fe17056d9b14ee6740c2bf4e261/oldIcons/Black%20Blue%20White%20Tactical%20eSports%20Discord%20Logo.png" alt="ChessLise" width="200"/>
+</p>
+
+## **What is Chesslise Web**
+**Chesslise Web** is the web port for popular Chesslise Discord app, it supports viewing how to install the bot, live coordinate game training, blindfold training, and generation of flashcard from game PGN
+
+## Demo
+
+![chesslisedemo](https://github.com/user-attachments/assets/f1ced366-a41f-4439-ac47-2648d31de41b)
+
+## Getting started 
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

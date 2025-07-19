@@ -33,6 +33,8 @@ export default function Navbar() {
     { label: "Coordinate Game", href: "/trainer" },
     { label: "Blindfold Game", href: "/blindfold" },
     { label: "Flashcards", href: "/flashcard" },
+    {label: "Friend Finder", href: "/friends"},
+    {label: "TOS", href: "/tos"}
   ];
 
   const iconLinks = [

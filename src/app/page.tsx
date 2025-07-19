@@ -268,7 +268,7 @@ export default function HomePage() {
               🔧 How to Install
             </Typography>
             <Typography color="#b9bbbe">
-              1. Click the "Add Chesslise" button above.
+              1. Click the Add Chesslise button above.
               <br />
               2. Give the bot permissions to read/send messages and embed links.
               <br />

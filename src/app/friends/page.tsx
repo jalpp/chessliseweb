@@ -15,6 +15,7 @@ import {
   Alert,
   Divider,
   Chip,
+  SelectChangeEvent,
 } from '@mui/material';
 
 interface Player {
@@ -147,8 +148,8 @@ export default function PlayerMatchPage() {
     fetchPlayers();
   }, []);
 
-  const handleChange = (field: keyof typeof preferences) => (e: any) => {
-    setPreferences((prev) => ({ ...prev, [field]: e.target.value }));
+  const handleChange = (field: keyof typeof preferences) => (event: SelectChangeEvent<string>) => {
+    setPreferences((prev) => ({ ...prev, [field]: event.target.value }));
   };
 
   const findMatch = () => {
@@ -169,7 +170,7 @@ export default function PlayerMatchPage() {
 
   const getSelectedPreferences = () => {
     return Object.entries(preferences)
-      .filter(([_, value]) => value !== '')
+      .filter(([, value]) => value !== '')
       .map(([key, value]) => ({
         label: fieldLabels[key as keyof typeof fieldLabels],
         value: getDisplayValue(value),
@@ -201,7 +202,7 @@ export default function PlayerMatchPage() {
       </Typography>
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Select your chess preferences below. We'll find players who share similar interests!
+        Select your chess preferences below. We will find players who share similar interests!
       </Typography>
 
       <Box display="grid" gridTemplateColumns="repeat(auto-fill, minmax(250px, 1fr))" gap={3} my={4}>
@@ -328,7 +329,7 @@ export default function PlayerMatchPage() {
               </Typography>
               {match.id && (
                 <Typography variant="body2" sx={{ mt: 1 }}>
-                  💡 <strong>Tip:</strong> Use the "View Discord Profile" button above to see their profile picture and verify it's the right person before sending a friend request.
+                  💡 <strong>Tip:</strong> Use the View Discord Profile button above to see their profile picture and verify it is the right person before sending a friend request.
                 </Typography>
               )}
             </Alert>

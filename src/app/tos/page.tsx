@@ -50,7 +50,7 @@ const TOSPage = () => {
       <Alert severity="info" sx={{ mb: 4 }}>
         <Typography variant="body2">
           <strong>TL;DR:</strong> Chesslise is free, respects your privacy, and helps chess lovers connect. 
-          We only store minimal data needed for matching players. You're responsible for your Discord server usage.
+          We only store minimal data needed for matching players. You are responsible for your Discord server usage.
         </Typography>
       </Alert>
 

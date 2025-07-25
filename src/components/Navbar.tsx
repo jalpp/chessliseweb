@@ -34,7 +34,9 @@ export default function Navbar() {
     { label: "Blindfold Game", href: "/blindfold" },
     { label: "Flashcards", href: "/flashcard" },
     {label: "Friend Finder", href: "/friends"},
+    {label: "Communities", href: "/communitylist"},
     {label: "TOS", href: "/tos"}
+    
   ];
 
   const iconLinks = [

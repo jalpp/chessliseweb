@@ -452,7 +452,7 @@ export default function HomePage() {
                   1
                 </Box>
                 <Typography color="#e3e5e8">
-                  Click "Add to Discord" and select your server
+                  Click Add to Discord and select your server
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>

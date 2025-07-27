@@ -61,13 +61,13 @@ const SessionManagementPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showCommands, setShowCommands] = useState(false);
   
-  // Filter states
+
   const [typeFilter, setTypeFilter] = useState('all');
   const [themeFilter, setThemeFilter] = useState('all');
   const [platformFilter, setPlatformFilter] = useState('all');
   const [durationFilter, setDurationFilter] = useState('all');
 
-  // Fetch sessions from API
+
   const fetchSessions = async () => {
     try {
       setLoading(true);
@@ -88,7 +88,7 @@ const SessionManagementPage: React.FC = () => {
     fetchSessions();
   }, []);
 
-  // Apply filters
+  
   useEffect(() => {
     let filtered = sessions;
 
@@ -108,7 +108,7 @@ const SessionManagementPage: React.FC = () => {
     setFilteredSessions(filtered);
   }, [sessions, typeFilter, themeFilter, platformFilter, durationFilter]);
 
-  // Helper functions
+
   const getDisplayName = (value: string, category: string): string => {
     const displayMap: Record<string, Record<string, string>> = {
       type: {
@@ -202,7 +202,7 @@ const SessionManagementPage: React.FC = () => {
           {/* Connection Info Alert */}
           <Alert severity="info" sx={{ mt: 2 }}>
             <AlertTitle>💬 How to Connect</AlertTitle>
-            To join a session, send a friend request to the session creator on Discord. Use the "View Profile" button on each session card to learn more about the host before connecting.
+            To join a session, send a friend request to the session creator on Discord. Use the View Profile button on each session card to learn more about the host before connecting.
           </Alert>
           
           {/* Action Buttons */}
@@ -355,7 +355,7 @@ const SessionManagementPage: React.FC = () => {
               >
                 <CardContent>
                   <Stack spacing={2}>
-                    {/* Header */}
+                   
                     <Stack direction="row" spacing={2} alignItems="flex-start">
                       <Avatar sx={{ bgcolor: 'primary.main' }}>
                         <Person />
@@ -370,7 +370,7 @@ const SessionManagementPage: React.FC = () => {
                       </Stack>
                     </Stack>
 
-                    {/* Session Type Chip */}
+                    
                     <Stack direction="row">
                       <Chip
                         label={getDisplayName(session.type, 'type')}
@@ -454,7 +454,7 @@ const SessionManagementPage: React.FC = () => {
 
             {/* Commands List */}
             <Stack spacing={2}>
-              {/* Add Session */}
+            
               <Paper elevation={1} sx={{ p: 2 }}>
                 <Stack spacing={2}>
                   <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -476,7 +476,7 @@ const SessionManagementPage: React.FC = () => {
                 </Stack>
               </Paper>
 
-              {/* Update Session */}
+             
               <Paper elevation={1} sx={{ p: 2 }}>
                 <Stack spacing={2}>
                   <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -498,7 +498,7 @@ const SessionManagementPage: React.FC = () => {
                 </Stack>
               </Paper>
 
-              {/* Delete Session */}
+          
               <Paper elevation={1} sx={{ p: 2 }}>
                 <Stack spacing={2}>
                   <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -537,7 +537,7 @@ const SessionManagementPage: React.FC = () => {
                     </Tooltip>
                   </Stack>
                   <Typography variant="body2" color="text.secondary">
-                    View all your sessions with a summary of each session's details
+                    View all your sessions with a summary of each session details
                   </Typography>
                 </Stack>
               </Paper>
@@ -578,10 +578,10 @@ const SessionManagementPage: React.FC = () => {
               </Stack>
             </Paper>
 
-            {/* Connection Instructions */}
+           
             <Alert severity="success">
               <AlertTitle>🤝 Connecting with Session Hosts</AlertTitle>
-              After creating a session, your Discord profile will be visible to others. When someone finds your session interesting, they can click "View Profile" to learn more about you, then send you a friend request on Discord to join your chess session!
+              After creating a session, your Discord profile will be visible to others. When someone finds your session interesting, they can click View Profile to learn more about you, then send you a friend request on Discord to join your chess session!
             </Alert>
           </Stack>
         </DialogContent>

@@ -1,4 +1,4 @@
-// /app/api/players/route.ts
+
 
 import { NextResponse } from 'next/server';
 
@@ -9,7 +9,7 @@ export async function GET() {
       headers: {
         'Content-Type': 'application/json',
       },
-      // If the API requires auth, add headers here
+     
     });
 
     const data = await res.json();

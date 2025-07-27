@@ -222,6 +222,7 @@ export default function CoordinateTrainer({ difficulty }: CoordinateTrainerProps
     return diff.charAt(0).toUpperCase() + diff.slice(1);
   };
 
+
   return (
     <Box sx={{ textAlign: "center", mt: 4, px: 2 }}>
       <Typography variant="h4" gutterBottom>

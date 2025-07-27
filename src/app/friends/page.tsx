@@ -180,13 +180,13 @@ export default function PlayerMatchPage() {
   return (
     <Box p={4} maxWidth="lg" mx="auto">
       <Typography variant="h4" gutterBottom align="center" sx={{ mb: 4 }}>
-        ♟️ Find Your Chess Buddy
+        Find Your Chess Buddy
       </Typography>
 
       <Box sx={{ mb: 4 }}>
         <Alert severity="info" sx={{ mb: 2 }}>
           <Typography variant="body2">
-            <strong>How to get started:</strong> Install Chesslise Discord bot, run <code>/connect</code>, and set your preferences to appear in the friend finder.
+            <strong>How to get started:</strong> Install Chesslise Discord App, run <code>/connect</code>, and set your preferences to appear in the friend finder.
           </Typography>
         </Alert>
 

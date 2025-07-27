@@ -97,7 +97,6 @@ const CommunityList: React.FC = () => {
         </Typography>
       </Box>
 
-      {/* How to Add Community Section */}
       <Paper elevation={2} sx={{ p: 3, mb: 4, bgcolor: 'info.50', border: '1px solid', borderColor: 'info.200' }}>
         <Box display="flex" alignItems="center" mb={2}>
           <InfoIcon color="info" sx={{ mr: 1 }} />
@@ -127,7 +126,6 @@ const CommunityList: React.FC = () => {
 
       <Divider sx={{ mb: 4 }} />
 
-      {/* Communities List */}
       {communities.length === 0 ? (
         <Alert severity="info">
           <AlertTitle>No Communities Found</AlertTitle>
@@ -149,7 +147,7 @@ const CommunityList: React.FC = () => {
             >
               <CardContent sx={{ p: 3 }}>
                 <Box display="flex" alignItems="flex-start" justifyContent="space-between" flexWrap="wrap" gap={2}>
-                  {/* Left Side - Community Info */}
+                 
                   <Box flex={1} minWidth="250px">
                     {/* Guild Name */}
                     <Typography 
@@ -161,7 +159,7 @@ const CommunityList: React.FC = () => {
                       {community.guildName}
                     </Typography>
 
-                    {/* Status Chip */}
+                   
                     <Box mb={2}>
                       <Chip 
                         label="Approved" 
@@ -177,7 +175,7 @@ const CommunityList: React.FC = () => {
                     </Typography>
                   </Box>
 
-                  {/* Right Side - Action Buttons */}
+                  
                   <Box display="flex" gap={1} flexWrap="wrap">
                     <Button
                       variant="contained"
@@ -204,7 +202,7 @@ const CommunityList: React.FC = () => {
         </Stack>
       )}
 
-      {/* Footer Info */}
+      
       <Box mt={6} textAlign="center">
         <Typography variant="body2" color="text.secondary">
           Communities are reviewed and approved by our moderation team to ensure a safe and welcoming environment.

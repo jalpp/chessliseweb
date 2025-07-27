@@ -1,9 +1,9 @@
 
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const res = await fetch('https://n23yas9vs3.execute-api.us-east-1.amazonaws.com/Prod/discord/', {
+    const res = await fetch('https://n23yas9vs3.execute-api.us-east-1.amazonaws.com/Prod/session/', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

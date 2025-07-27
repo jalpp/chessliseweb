@@ -35,6 +35,7 @@ export default function Navbar() {
     { label: "Flashcards", href: "/flashcard" },
     {label: "Friend Finder", href: "/friends"},
     {label: "Communities", href: "/communitylist"},
+    {label: "Sessions", href: "/session"},
     {label: "TOS", href: "/tos"}
     
   ];

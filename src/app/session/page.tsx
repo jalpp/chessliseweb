@@ -1,5 +1,6 @@
 "use client"
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useUser } from '@clerk/nextjs';
 import {
   Box,
   Card,
@@ -25,7 +26,10 @@ import {
   CircularProgress,
   Container,
   Stack,
-  Badge
+  Badge,
+  TextField,
+  Snackbar,
+  Menu
 } from '@mui/material';
 import {
   FilterList,
@@ -38,8 +42,13 @@ import {
   Info,
   ContentCopy,
   Clear,
-  OpenInNew
+  OpenInNew,
+  Add,
+  Edit,
+  Delete,
+  MoreVert
 } from '@mui/icons-material';
+import { useSession } from '@clerk/nextjs';
 
 interface Session {
   id: string;
@@ -54,19 +63,78 @@ interface Session {
   updatedAt: { $date: string };
 }
 
+interface SessionFormData {
+  sessionName: string;
+  type: string;
+  theme: string;
+  platform: string;
+  duration: string;
+  timezone: string;
+}
+
 const SessionManagementPage: React.FC = () => {
+  const { user } = useUser();
+  const {session} = useSession();
+  const isAuthenticated = !!user;
   const [sessions, setSessions] = useState<Session[]>([]);
   const [filteredSessions, setFilteredSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCommands, setShowCommands] = useState(false);
   
+  // CRUD Dialog States
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+  const [formLoading, setFormLoading] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  
+  // Snackbar
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
+  // Form refs instead of controlled state
+  const sessionNameRef = useRef<HTMLInputElement>(null);
+  const typeRef = useRef<HTMLSelectElement>(null);
+  const themeRef = useRef<HTMLSelectElement>(null);
+  const platformRef = useRef<HTMLSelectElement>(null);
+  const durationRef = useRef<HTMLSelectElement>(null);
+  const timezoneRef = useRef<HTMLInputElement>(null);
+
+  // Remove formData state - we'll get values from refs when needed
+  const [initialFormData, setInitialFormData] = useState<SessionFormData>({
+    sessionName: '',
+    type: '',
+    theme: '',
+    platform: '',
+    duration: '',
+    timezone: ''
+  });
+
+  // Filters
   const [typeFilter, setTypeFilter] = useState('all');
   const [themeFilter, setThemeFilter] = useState('all');
   const [platformFilter, setPlatformFilter] = useState('all');
   const [durationFilter, setDurationFilter] = useState('all');
 
+  // Get Discord ID from Clerk user
+  const getDiscordId = (): string | null => {
+    if (!user) return null;
+    // Assuming Discord ID is stored in user.externalId or user.id depending on your Clerk setup
+    return user.externalAccounts?.[0]?.providerUserId;
+  };
+
+  const showSnackbar = (message: string, severity: 'success' | 'error' | 'info' | 'warning' = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
 
   const fetchSessions = async () => {
     try {
@@ -84,11 +152,222 @@ const SessionManagementPage: React.FC = () => {
     }
   };
 
+  // Get form values from refs
+  const getFormValues = (): SessionFormData => ({
+    sessionName: sessionNameRef.current?.value || '',
+    type: typeRef.current?.value || '',
+    theme: themeRef.current?.value || '',
+    platform: platformRef.current?.value || '',
+    duration: durationRef.current?.value || '',
+    timezone: timezoneRef.current?.value || ''
+  });
+
+  const createSession = async () => {
+    const discordId = getDiscordId();
+    if (!discordId) {
+      showSnackbar('Discord ID not found', 'error');
+      return;
+    }
+
+    const formValues = getFormValues();
+    
+    // Validate required fields
+    if (!formValues.sessionName || !formValues.type || !formValues.theme || 
+        !formValues.platform || !formValues.duration || !formValues.timezone) {
+      showSnackbar('Please fill in all required fields', 'error');
+      return;
+    }
+
+    try {
+      setFormLoading(true);
+      const token = await session?.getToken();
+      
+      const response = await fetch('/api/createsession', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          discordId: discordId,
+          username: user?.firstName || 'Unknown',
+          ...formValues
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create session');
+      }
+
+      showSnackbar('Session created successfully!');
+      setCreateDialogOpen(false);
+      resetForm();
+      fetchSessions();
+    } catch (err) {
+      showSnackbar(err instanceof Error ? err.message : 'Failed to create session', 'error');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const updateSession = async () => {
+  const discordId = getDiscordId();
+  if (!discordId || !selectedSession) {
+    showSnackbar('Discord ID or session not found', 'error');
+    return;
+  }
+
+  const formValues = getFormValues();
+  
+  // Validate required fields
+  if (!formValues.sessionName || !formValues.type || !formValues.theme || 
+      !formValues.platform || !formValues.duration || !formValues.timezone) {
+    showSnackbar('Please fill in all required fields', 'error');
+    return;
+  }
+
+  try {
+    setFormLoading(true);
+    const token = await session?.getToken();
+    
+    const response = await fetch(`/api/updatesession`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        discordId: discordId,
+        username: user?.firstName || 'Unknown',
+        sessionName: selectedSession.sessionName, // Original session name for identification
+        newSessionName: formValues.sessionName,
+        type: formValues.type,
+        theme: formValues.theme,
+        platform: formValues.platform,
+        duration: formValues.duration,
+        timezone: formValues.timezone
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update session');
+    }
+
+    showSnackbar('Session updated successfully!');
+    setUpdateDialogOpen(false);
+    resetForm();
+    setSelectedSession(null);
+    fetchSessions();
+  } catch (err) {
+    showSnackbar(err instanceof Error ? err.message : 'Failed to update session', 'error');
+  } finally {
+    setFormLoading(false);
+  }
+};
+
+  const deleteSession = async () => {
+    const discordId = getDiscordId();
+    if (!discordId || !selectedSession) {
+      showSnackbar('Discord ID or session not found', 'error');
+      return;
+    }
+
+    try {
+      setFormLoading(true);
+      const token = await session?.getToken();
+      
+      const response = await fetch(`/api/deletesession?discordId=${discordId}&sessionName=${selectedSession.sessionName}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete session');
+      }
+
+      showSnackbar('Session deleted successfully!');
+      setDeleteDialogOpen(false);
+      setSelectedSession(null);
+      fetchSessions();
+    } catch (err) {
+      showSnackbar(err instanceof Error ? err.message : 'Failed to delete session', 'error');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    if (sessionNameRef.current) sessionNameRef.current.value = '';
+    if (typeRef.current) typeRef.current.value = '';
+    if (themeRef.current) themeRef.current.value = '';
+    if (platformRef.current) platformRef.current.value = '';
+    if (durationRef.current) durationRef.current.value = '';
+    if (timezoneRef.current) timezoneRef.current.value = '';
+    
+    setInitialFormData({
+      sessionName: '',
+      type: '',
+      theme: '',
+      platform: '',
+      duration: '',
+      timezone: ''
+    });
+  };
+
+  const openCreateDialog = () => {
+    resetForm();
+    setCreateDialogOpen(true);
+  };
+
+  const openUpdateDialog = (session: Session) => {
+    setSelectedSession(session);
+    setInitialFormData({
+      sessionName: session.sessionName,
+      type: session.type,
+      theme: session.theme,
+      platform: session.platform,
+      duration: session.duration,
+      timezone: session.timezone
+    });
+    setUpdateDialogOpen(true);
+    setMenuAnchor(null);
+  };
+
+  const openDeleteDialog = (session: Session) => {
+    setSelectedSession(session);
+    setDeleteDialogOpen(true);
+    setMenuAnchor(null);
+  };
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, session: Session) => {
+    event.stopPropagation();
+    setSelectedSession(session);
+    setMenuAnchor(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchor(null);
+    setSelectedSession(null);
+  };
+
+  // Check if current user owns the session
+  const isMySession = (session: Session): boolean => {
+    const discordId = getDiscordId();
+    return discordId === session.id;
+  };
+
+  // Get user's sessions
+  const mySessions = sessions.filter(session => isMySession(session));
+
   useEffect(() => {
     fetchSessions();
   }, []);
 
-  
   useEffect(() => {
     let filtered = sessions;
 
@@ -107,7 +386,6 @@ const SessionManagementPage: React.FC = () => {
 
     setFilteredSessions(filtered);
   }, [sessions, typeFilter, themeFilter, platformFilter, durationFilter]);
-
 
   const getDisplayName = (value: string, category: string): string => {
     const displayMap: Record<string, Record<string, string>> = {
@@ -174,6 +452,110 @@ const SessionManagementPage: React.FC = () => {
     window.open(`https://discordlookup.com/user/${discordId}`, '_blank');
   };
 
+  // Session Form Component using refs instead of controlled inputs
+  const SessionForm: React.FC<{ title: string }> = ({ title }) => (
+  <Stack spacing={3}>
+    <Typography variant="h6">{title}</Typography>
+    
+    {/* Loading overlay */}
+    {formLoading && (
+      <Stack 
+        alignItems="center" 
+        justifyContent="center" 
+        spacing={2}
+      >
+        <CircularProgress />
+        <Typography variant="body2" color="text.secondary">
+          Processing session...
+        </Typography>
+      </Stack>
+    )}
+    
+    <TextField
+      inputRef={sessionNameRef}
+      label="Session Name"
+      defaultValue={initialFormData.sessionName}
+      fullWidth
+      required
+      variant="outlined"
+      disabled={formLoading}
+    />
+    
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+      <FormControl fullWidth required variant="outlined">
+        <InputLabel>Session Type</InputLabel>
+        <Select
+          inputRef={typeRef}
+          defaultValue={initialFormData.type}
+          label="Session Type"
+          disabled={formLoading}
+        >
+          <MenuItem value="play">Playing Chess</MenuItem>
+          <MenuItem value="lecture">Chess Lecture</MenuItem>
+          <MenuItem value="analysis">Analysis</MenuItem>
+        </Select>
+      </FormControl>
+      
+      <FormControl fullWidth required variant="outlined">
+        <InputLabel>Theme</InputLabel>
+        <Select
+          inputRef={themeRef}
+          defaultValue={initialFormData.theme}
+          label="Theme"
+          disabled={formLoading}
+        >
+          <MenuItem value="opening">Opening</MenuItem>
+          <MenuItem value="middlegame">Middlegame</MenuItem>
+          <MenuItem value="endgame">Endgame</MenuItem>
+          <MenuItem value="mastergame">Master Game</MenuItem>
+          <MenuItem value="gameanalysis">Game Analysis</MenuItem>
+        </Select>
+      </FormControl>
+    </Stack>
+    
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+      <FormControl fullWidth required variant="outlined">
+        <InputLabel>Platform</InputLabel>
+        <Select
+          inputRef={platformRef}
+          defaultValue={initialFormData.platform}
+          label="Platform"
+          disabled={formLoading}
+        >
+          <MenuItem value="discord">Discord</MenuItem>
+          <MenuItem value="lichess">Lichess</MenuItem>
+        </Select>
+      </FormControl>
+      
+      <FormControl fullWidth required variant="outlined">
+        <InputLabel>Duration</InputLabel>
+        <Select
+          inputRef={durationRef}
+          defaultValue={initialFormData.duration}
+          label="Duration"
+          disabled={formLoading}
+        >
+          <MenuItem value="30min">30 minutes</MenuItem>
+          <MenuItem value="1hour">1 hour</MenuItem>
+          <MenuItem value="2hour">2 hours</MenuItem>
+        </Select>
+      </FormControl>
+    </Stack>
+    
+    <TextField
+      inputRef={timezoneRef}
+      label="Timezone"
+      defaultValue={initialFormData.timezone}
+      fullWidth
+      required
+      variant="outlined"
+      placeholder="e.g., UTC, EST at 1PM, PST in evening"
+      helperText="Enter your timezone (e.g., UTC, EST, PST, UTC+2) and time of the session"
+      disabled={formLoading}
+    />
+  </Stack>
+);
+
   if (loading) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -199,6 +581,22 @@ const SessionManagementPage: React.FC = () => {
             Connect with fellow chess enthusiasts worldwide. Discover personalized chess sessions, from beginner tutorials to grandmaster analysis. Learn, play, and improve together.
           </Typography>
           
+          {/* My Sessions Summary - Only show when authenticated */}
+          {isAuthenticated && mySessions.length > 0 && (
+            <Alert severity="info">
+              <AlertTitle>Your Sessions</AlertTitle>
+              You have {mySessions.length} active session{mySessions.length !== 1 ? 's' : ''}. You can create up to 5 sessions total.
+            </Alert>
+          )}
+          
+          {/* Authentication Notice for non-logged in users */}
+          {!isAuthenticated && (
+            <Alert severity="warning">
+              <AlertTitle>🔐 Sign In to Create Sessions</AlertTitle>
+              You're viewing sessions as a guest. Sign in with Discord to create, edit, and manage your own chess sessions.
+            </Alert>
+          )}
+          
           {/* Connection Info Alert */}
           <Alert severity="info" sx={{ mt: 2 }}>
             <AlertTitle>💬 How to Connect</AlertTitle>
@@ -207,6 +605,17 @@ const SessionManagementPage: React.FC = () => {
           
           {/* Action Buttons */}
           <Stack direction="row" spacing={2}>
+            {/* Only show Create Session button when authenticated */}
+            {isAuthenticated && (
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={openCreateDialog}
+                disabled={mySessions.length >= 5}
+              >
+                Create Session
+              </Button>
+            )}
             <Button
               variant="outlined"
               startIcon={<Info />}
@@ -330,7 +739,7 @@ const SessionManagementPage: React.FC = () => {
                 No sessions found matching your filters
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Try adjusting your filters or create a new session using Discord commands
+                Try adjusting your filters or create a new session
               </Typography>
             </Stack>
           </Paper>
@@ -351,26 +760,41 @@ const SessionManagementPage: React.FC = () => {
               <Card 
                 key={`${session.id}-${session.sessionName}`} 
                 elevation={2} 
-                sx={{ height: 'fit-content' }}
+                sx={{ 
+                  height: 'fit-content',
+                  border: isAuthenticated && isMySession(session) ? '2px solid' : 'none',
+                  borderColor: isAuthenticated && isMySession(session) ? 'primary.main' : 'transparent'
+                }}
               >
                 <CardContent>
                   <Stack spacing={2}>
-                   
+                    {/* Header with Menu */}
                     <Stack direction="row" spacing={2} alignItems="flex-start">
-                      <Avatar sx={{ bgcolor: 'primary.main' }}>
+                      <Avatar sx={{ bgcolor: isAuthenticated && isMySession(session) ? 'primary.main' : 'grey.500' }}>
                         <Person />
                       </Avatar>
                       <Stack spacing={0.5} sx={{ flexGrow: 1, minWidth: 0 }}>
-                        <Typography variant="h6" component="h3" noWrap>
-                          {session.sessionName}
-                        </Typography>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between">
+                          <Typography variant="h6" component="h3" noWrap>
+                            {session.sessionName}
+                          </Typography>
+                          {/* Only show menu for authenticated users on their own sessions */}
+                          {isAuthenticated && isMySession(session) && (
+                            <IconButton
+                              size="small"
+                              onClick={(e) => handleMenuOpen(e, session)}
+                            >
+                              <MoreVert />
+                            </IconButton>
+                          )}
+                        </Stack>
                         <Typography variant="body2" color="text.secondary">
-                          by {session.username}
+                          by {session.username} {isAuthenticated && isMySession(session) && '(You)'}
                         </Typography>
                       </Stack>
                     </Stack>
 
-                    
+                    {/* Session Type */}
                     <Stack direction="row">
                       <Chip
                         label={getDisplayName(session.type, 'type')}
@@ -435,7 +859,107 @@ const SessionManagementPage: React.FC = () => {
         )}
       </Stack>
 
-      {/* Commands Dialog */}
+      {/* Session Menu - Only show when authenticated */}
+      {isAuthenticated && (
+        <Menu
+          anchorEl={menuAnchor}
+          open={Boolean(menuAnchor)}
+          onClose={handleMenuClose}
+        >
+          <MenuItem onClick={() => selectedSession && openUpdateDialog(selectedSession)}>
+            <Edit sx={{ mr: 1 }} />
+            Edit Session
+          </MenuItem>
+          <MenuItem onClick={() => selectedSession && openDeleteDialog(selectedSession)}>
+            <Delete sx={{ mr: 1 }} />
+            Delete Session
+          </MenuItem>
+        </Menu>
+      )}
+
+      {/* Create Session Dialog - Only show when authenticated */}
+      {isAuthenticated && (
+        <Dialog
+          open={createDialogOpen}
+          onClose={() => setCreateDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>Create New Session</DialogTitle>
+          <DialogContent>
+            <Box sx={{ pt: 1 }}>
+              <SessionForm title="Session Details" />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={createSession} 
+              variant="contained"
+              disabled={formLoading}
+            >
+              {formLoading ? <CircularProgress size={20} /> : 'Create Session'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+
+      {/* Update Session Dialog - Only show when authenticated */}
+      {isAuthenticated && (
+        <Dialog
+          open={updateDialogOpen}
+          onClose={() => setUpdateDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>Update Session</DialogTitle>
+          <DialogContent>
+            <Box sx={{ pt: 1 }}>
+              <SessionForm title="Update Session Details" />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setUpdateDialogOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={updateSession} 
+              variant="contained"
+              disabled={formLoading}
+            >
+              {formLoading ? <CircularProgress size={20} /> : 'Update Session'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+
+      {/* Delete Session Dialog - Only show when authenticated */}
+      {isAuthenticated && (
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Delete Session</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Are you sure you want to delete the session "{selectedSession?.sessionName}"? This action cannot be undone.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={deleteSession} 
+              variant="contained"
+              color="error"
+              disabled={formLoading}
+            >
+              {formLoading ? <CircularProgress size={20} /> : 'Delete Session'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+
+      {/* Commands Dialog - Keep existing content */}
       <Dialog
         open={showCommands}
         onClose={() => setShowCommands(false)}
@@ -454,7 +978,6 @@ const SessionManagementPage: React.FC = () => {
 
             {/* Commands List */}
             <Stack spacing={2}>
-            
               <Paper elevation={1} sx={{ p: 2 }}>
                 <Stack spacing={2}>
                   <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -476,7 +999,6 @@ const SessionManagementPage: React.FC = () => {
                 </Stack>
               </Paper>
 
-             
               <Paper elevation={1} sx={{ p: 2 }}>
                 <Stack spacing={2}>
                   <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -498,7 +1020,6 @@ const SessionManagementPage: React.FC = () => {
                 </Stack>
               </Paper>
 
-          
               <Paper elevation={1} sx={{ p: 2 }}>
                 <Stack spacing={2}>
                   <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -520,7 +1041,6 @@ const SessionManagementPage: React.FC = () => {
                 </Stack>
               </Paper>
 
-              {/* List Sessions */}
               <Paper elevation={1} sx={{ p: 2 }}>
                 <Stack spacing={2}>
                   <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -578,7 +1098,6 @@ const SessionManagementPage: React.FC = () => {
               </Stack>
             </Paper>
 
-           
             <Alert severity="success">
               <AlertTitle>🤝 Connecting with Session Hosts</AlertTitle>
               After creating a session, your Discord profile will be visible to others. When someone finds your session interesting, they can click View Profile to learn more about you, then send you a friend request on Discord to join your chess session!
@@ -589,6 +1108,21 @@ const SessionManagementPage: React.FC = () => {
           <Button onClick={() => setShowCommands(false)}>Close</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

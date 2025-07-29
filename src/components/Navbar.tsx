@@ -1,3 +1,4 @@
+// Simple version to test if Clerk is working
 "use client";
 import {
   AppBar,
@@ -12,6 +13,7 @@ import {
   ListItemText,
   useMediaQuery,
   useTheme,
+  Divider,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import GitHubIcon from "@mui/icons-material/GitHub";
@@ -19,27 +21,33 @@ import { FaDiscord } from "react-icons/fa";
 import { useState } from "react";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 
+// Try importing Clerk components one by one to see which fails
+import { SignInButton } from "@clerk/nextjs";
+import { SignUpButton } from "@clerk/nextjs";
+import { SignedIn } from "@clerk/nextjs";
+import { SignedOut } from "@clerk/nextjs";
+import { UserButton } from "@clerk/nextjs";
+
 export default function Navbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-
+  
   const toggleDrawer = (open: boolean) => () => {
     setDrawerOpen(open);
   };
-
+  
   const navLinks = [
     { label: "Home", href: "/" },
     { label: "Coordinate Game", href: "/trainer" },
     { label: "Blindfold Game", href: "/blindfold" },
     { label: "Flashcards", href: "/flashcard" },
-    {label: "Friend Finder", href: "/friends"},
-    {label: "Communities", href: "/communitylist"},
-    {label: "Sessions", href: "/session"},
-    {label: "TOS", href: "/tos"}
-    
+    { label: "Friend Finder", href: "/friends" },
+    { label: "Communities", href: "/communitylist" },
+    { label: "Sessions", href: "/session" },
+    { label: "TOS", href: "/tos" }
   ];
-
+  
   const iconLinks = [
     {
       icon: <GitHubIcon />,
@@ -65,19 +73,23 @@ export default function Navbar() {
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             ChessLise
           </Typography>
-
           {isMobile ? (
-            <IconButton color="inherit" onClick={toggleDrawer(true)}>
-              <MenuIcon />
-            </IconButton>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <SignedIn>
+                <UserButton />
+              </SignedIn>
+              <IconButton color="inherit" onClick={toggleDrawer(true)}>
+                <MenuIcon />
+              </IconButton>
+            </Box>
           ) : (
-            <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {navLinks.map((link) => (
                 <Button key={link.href} color="inherit" href={link.href}>
                   {link.label}
                 </Button>
               ))}
-              {/* Donate button */}
+
               {iconLinks.map((link, idx) => (
                 <IconButton
                   key={idx}
@@ -88,11 +100,23 @@ export default function Navbar() {
                   {link.icon}
                 </IconButton>
               ))}
+
+              <SignedOut>
+                <SignInButton mode="modal" />
+       
+                <SignUpButton mode="modal" />
+                  
+           
+              </SignedOut>
+              
+              <SignedIn>
+                <UserButton />
+              </SignedIn>
             </Box>
           )}
         </Toolbar>
       </AppBar>
-
+      
       <Drawer anchor="right" open={drawerOpen} onClose={toggleDrawer(false)}>
         <Box
           sx={{
@@ -121,6 +145,9 @@ export default function Navbar() {
                 <ListItemText primary={link.label} />
               </ListItem>
             ))}
+
+            <Divider sx={{ my: 1, bgcolor: 'rgba(255, 255, 255, 0.3)' }} />
+            
             {iconLinks.map((link, idx) => (
               <ListItem
                 key={idx}
@@ -135,11 +162,18 @@ export default function Navbar() {
                   },
                 }}
               >
-                <ListItemText
-                  primary={link.name}
-                />
+                <ListItemText primary={link.name} />
               </ListItem>
             ))}
+
+            <SignedOut>
+              <Divider sx={{ my: 1, bgcolor: 'rgba(255, 255, 255, 0.3)' }} />
+              <SignInButton mode="modal"/>
+              
+              <SignUpButton mode="modal"/>
+               
+              
+            </SignedOut>
           </List>
         </Box>
       </Drawer>

@@ -593,7 +593,7 @@ const SessionManagementPage: React.FC = () => {
           {!isAuthenticated && (
             <Alert severity="warning">
               <AlertTitle>🔐 Sign In to Create Sessions</AlertTitle>
-              You're viewing sessions as a guest. Sign in with Discord to create, edit, and manage your own chess sessions.
+              You are viewing sessions as a guest. Sign in with Discord to create, edit, and manage your own chess sessions.
             </Alert>
           )}
           
@@ -942,7 +942,7 @@ const SessionManagementPage: React.FC = () => {
           <DialogTitle>Delete Session</DialogTitle>
           <DialogContent>
             <Typography>
-              Are you sure you want to delete the session "{selectedSession?.sessionName}"? This action cannot be undone.
+              Are you sure you want to delete the session {selectedSession?.sessionName}? This action cannot be undone.
             </Typography>
           </DialogContent>
           <DialogActions>

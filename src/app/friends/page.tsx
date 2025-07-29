@@ -305,13 +305,13 @@ export default function PlayerMatchPage() {
           ) : isUserInNetwork ? (
             <Alert severity="success" sx={{ mb: 2 }}>
               <Typography variant="body2">
-                <strong>Welcome back!</strong> You're already part of the ChessLise network. Other players can find and connect with you!
+                <strong>Welcome back!</strong> You are already part of the ChessLise network. Other players can find and connect with you!
               </Typography>
             </Alert>
           ) : (
             <Alert severity="warning" sx={{ mb: 2 }}>
               <Typography variant="body2">
-                <strong>Join the network:</strong> You're signed in! Click the "Join ChessLise Network" button below to set your preferences and become discoverable by other players.
+                <strong>Join the network:</strong> You are signed in! Click the Join ChessLise Network button below to set your preferences and become discoverable by other players.
               </Typography>
             </Alert>
           )}

@@ -30,7 +30,13 @@ import SecurityIcon from "@mui/icons-material/Security";
 import GroupsIcon from "@mui/icons-material/Groups";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import LoginIcon from '@mui/icons-material/Login';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { Check } from "@mui/icons-material";
+
+// Import Clerk components
+import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/nextjs";
+
 
 interface NavLink {
   label: string;
@@ -86,8 +92,7 @@ const commands: Command[] = [
 ];
 
 export default function HomePage() {
- 
-
+  const clerk = useClerk();
   const groupedCommands = commands.reduce((acc, command) => {
     if (!acc[command.category]) {
       acc[command.category] = [];
@@ -117,7 +122,6 @@ export default function HomePage() {
         pb: 12,
       }}
     >
-     
       <Box
         sx={{
           position: "absolute",
@@ -133,8 +137,7 @@ export default function HomePage() {
       />
 
       <Container maxWidth="lg" sx={{ position: "relative", zIndex: 2 }}>
-        
-        <Fade in timeout={800}>
+     <Fade in timeout={800}>
           <Stack spacing={6} alignItems="center" textAlign="center">
             <Box
               sx={{
@@ -217,7 +220,6 @@ export default function HomePage() {
                     fontWeight: 600,
                   }}
                 />
-                
               </Stack>
             </Stack>
 
@@ -274,10 +276,94 @@ export default function HomePage() {
                 Join Community
               </Button>
             </Stack>
+
+            {/* Authentication Buttons */}
+            <SignedOut>
+              <Box 
+                sx={{ 
+                  mt: 4,
+                  p: 4,
+                  borderRadius: 3,
+                  background: "linear-gradient(135deg, rgba(67, 181, 129, 0.05), rgba(88, 101, 242, 0.05))",
+                  border: "1px solid rgba(67, 181, 129, 0.2)",
+                  backdropFilter: "blur(10px)",
+                  maxWidth: 600,
+                  width: "100%",
+                }}
+              >
+                <Stack spacing={3} alignItems="center">
+                  <Typography
+                    variant="h5"
+                    sx={{ 
+                      color: "#e3e5e8",
+                      fontWeight: 400,
+                      fontSize: { xs: "1rem", md: "1.25rem" },
+                      lineHeight: 1.5,
+                      textAlign: "center",
+                    }}
+                  >
+                    Join the ChessLise community to manage your chess sessions and connect with fellow players
+                  </Typography>
+                  
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="center">
+                    <Button
+                      variant="contained"
+                      startIcon={<LoginIcon />}
+                      onClick={() => clerk.openSignIn()}
+                      sx={{
+                        backgroundColor: "#43b581",
+                        color: "#fff",
+                        fontWeight: 600,
+                        px: 4,
+                        py: 2,
+                        borderRadius: 2,
+                        textTransform: "none",
+                        fontSize: "1rem",
+                        minWidth: 140,
+                        boxShadow: "0 4px 16px rgba(67, 181, 129, 0.3)",
+                        ":hover": {
+                          backgroundColor: "#369657",
+                          transform: "translateY(-2px)",
+                          boxShadow: "0 6px 20px rgba(67, 181, 129, 0.4)",
+                        },
+                        transition: "all 0.3s ease",
+                      }}
+                    >
+                      Sign In
+                    </Button>
+               
+                    <Button
+                      variant="outlined"
+                      onClick={() => clerk.openSignUp()}
+                      startIcon={<PersonAddIcon />}
+                      sx={{
+                        borderColor: "#43b581",
+                        color: "#43b581",
+                        fontWeight: 600,
+                        px: 4,
+                        py: 2,
+                        borderRadius: 2,
+                        textTransform: "none",
+                        borderWidth: 2,
+                        fontSize: "1rem",
+                        minWidth: 140,
+                        ":hover": {
+                          backgroundColor: "#43b581",
+                          color: "#fff",
+                          transform: "translateY(-2px)",
+                          boxShadow: "0 6px 20px rgba(67, 181, 129, 0.3)",
+                        },
+                        transition: "all 0.3s ease",
+                      }}
+                    >
+                      Sign Up
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Box>
+            </SignedOut>
           </Stack>
         </Fade>
-
-      
 
         {/* Features Section */}
         <Box mt={12}>

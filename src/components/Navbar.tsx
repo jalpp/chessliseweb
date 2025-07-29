@@ -1,4 +1,3 @@
-// Simple version to test if Clerk is working
 "use client";
 import {
   AppBar,
@@ -21,9 +20,7 @@ import { FaDiscord } from "react-icons/fa";
 import { useState } from "react";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 
-// Try importing Clerk components one by one to see which fails
-import { SignInButton } from "@clerk/nextjs";
-import { SignUpButton } from "@clerk/nextjs";
+import { useClerk } from "@clerk/nextjs";
 import { SignedIn } from "@clerk/nextjs";
 import { SignedOut } from "@clerk/nextjs";
 import { UserButton } from "@clerk/nextjs";
@@ -32,6 +29,7 @@ export default function Navbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const { openSignIn, openSignUp } = useClerk();
   
   const toggleDrawer = (open: boolean) => () => {
     setDrawerOpen(open);
@@ -65,6 +63,14 @@ export default function Navbar() {
       name: "Donate"
     },
   ];
+
+  const handleSignIn = () => {
+    openSignIn();
+  };
+
+  const handleSignUp = () => {
+    openSignUp();
+  };
 
   return (
     <>
@@ -102,11 +108,30 @@ export default function Navbar() {
               ))}
 
               <SignedOut>
-                <SignInButton mode="modal" />
-       
-                <SignUpButton mode="modal" />
-                  
-           
+                <Button 
+                  color="inherit" 
+                  onClick={handleSignIn}
+                  sx={{ 
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    '&:hover': {
+                      bgcolor: 'rgba(255, 255, 255, 0.1)',
+                    }
+                  }}
+                >
+                  Sign In
+                </Button>
+                <Button 
+                  color="inherit" 
+                  onClick={handleSignUp}
+                  sx={{ 
+                    bgcolor: 'rgba(255, 255, 255, 0.1)',
+                    '&:hover': {
+                      bgcolor: 'rgba(255, 255, 255, 0.2)',
+                    }
+                  }}
+                >
+                  Sign Up
+                </Button>
               </SignedOut>
               
               <SignedIn>
@@ -168,11 +193,28 @@ export default function Navbar() {
 
             <SignedOut>
               <Divider sx={{ my: 1, bgcolor: 'rgba(255, 255, 255, 0.3)' }} />
-              <SignInButton mode="modal"/>
-              
-              <SignUpButton mode="modal"/>
-               
-              
+              <ListItem
+                onClick={handleSignIn}
+                sx={{
+                  cursor: "pointer",
+                  "&:hover": {
+                    bgcolor: "primary.dark",
+                  },
+                }}
+              >
+                <ListItemText primary="Sign In" />
+              </ListItem>
+              <ListItem
+                onClick={handleSignUp}
+                sx={{
+                  cursor: "pointer",
+                  "&:hover": {
+                    bgcolor: "primary.dark",
+                  },
+                }}
+              >
+                <ListItemText primary="Sign Up" />
+              </ListItem>
             </SignedOut>
           </List>
         </Box>

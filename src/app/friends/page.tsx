@@ -464,7 +464,7 @@ export default function PlayerMatchPage() {
               🎉 {matchesToDisplay.length === 1 ? 'Perfect Match Found!' : `${matches.length} Matches Found!`}
               {showOnlyOne && matches.length > 1 && (
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Showing 1 of {matches.length} matches. Turn off "Show only one match" to see all results.
+                  Showing 1 of {matches.length} matches. Turn off Show only one match to see all results.
                 </Typography>
               )}
             </Typography>

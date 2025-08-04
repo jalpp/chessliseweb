@@ -24,6 +24,10 @@ import {
   DialogActions,
   Snackbar,
   Fade,
+  Avatar,
+  FormControlLabel,
+  Switch,
+  Grid,
 } from '@mui/material';
 
 interface Player {
@@ -131,9 +135,10 @@ export default function PlayerMatchPage() {
   const {session} = useSession();
   const [players, setPlayers] = useState<Player[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [dataReady, setDataReady] = useState(false); // New state for smooth transition
+  const [dataReady, setDataReady] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [match, setMatch] = useState<Player | null>(null);
+  const [matches, setMatches] = useState<Player[]>([]); 
+  const [showOnlyOne, setShowOnlyOne] = useState(false); 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -142,6 +147,11 @@ export default function PlayerMatchPage() {
   const getDiscordId = (): string | null => {
     if (!user) return null;
     return user.externalAccounts?.[0]?.providerUserId || null;
+  };
+
+  
+  const getDiscordAvatarUrl = (userId: string): string => {
+    return `https://cdn.discordapp.com/embed/avatars/${parseInt(userId) % 6}.png`;
   };
 
   const [searchPreferences, setSearchPreferences] = useState({
@@ -178,7 +188,6 @@ export default function PlayerMatchPage() {
         console.error('Failed to fetch players', err);
       } finally {
         setInitialLoading(false);
-     
         setTimeout(() => setDataReady(true), 100);
       }
     };
@@ -193,16 +202,27 @@ export default function PlayerMatchPage() {
     setJoinPreferences((prev) => ({ ...prev, [field]: event.target.value }));
   };
 
-  const findMatch = () => {
-    const match = players.find((player) =>
-      player.pl === searchPreferences.platform ||
-      player.ptc === searchPreferences.ptc ||
-      player.favplayer === searchPreferences.favplayer ||
-      player.favpiece === searchPreferences.favpiece ||
-      player.favopening === searchPreferences.favopening ||
-      player.favstyle === searchPreferences.favstyle
-    );
-    setMatch(match || null);
+  const findMatches = () => {
+    const currentUserDiscordId = getDiscordId();
+    
+    const filteredMatches = players.filter((player) => {
+      
+      if (currentUserDiscordId && player.id === currentUserDiscordId) {
+        return false;
+      }
+
+     
+      return (
+        (searchPreferences.platform === '' || player.pl === searchPreferences.platform) &&
+        (searchPreferences.ptc === '' || player.ptc === searchPreferences.ptc) &&
+        (searchPreferences.favplayer === '' || player.favplayer === searchPreferences.favplayer) &&
+        (searchPreferences.favpiece === '' || player.favpiece === searchPreferences.favpiece) &&
+        (searchPreferences.favopening === '' || player.favopening === searchPreferences.favopening) &&
+        (searchPreferences.favstyle === '' || player.favstyle === searchPreferences.favstyle)
+      );
+    });
+
+    setMatches(filteredMatches);
   };
 
   const handleJoinNetwork = async () => {
@@ -232,12 +252,12 @@ export default function PlayerMatchPage() {
         setDialogOpen(false);
         setIsUserInNetwork(true);
         
-        // Refresh players list
+      
         const res = await fetch('/api/players');
         const data = await res.json();
         setPlayers(data);
         
-        // Reset form
+    
         setJoinPreferences({
           pl: '',
           ptc: '',
@@ -276,7 +296,18 @@ export default function PlayerMatchPage() {
     return Object.values(joinPreferences).every(value => value !== '');
   };
 
-  // Show loading spinner while fetching initial data
+  const hasActiveFilters = () => {
+    return Object.values(searchPreferences).some(value => value !== '');
+  };
+
+
+  const getMatchesToDisplay = () => {
+    if (showOnlyOne && matches.length > 0) {
+      return [matches[0]];
+    }
+    return matches;
+  };
+
   if (initialLoading || !dataReady) {
     return (
       <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight="50vh" p={4}>
@@ -287,6 +318,8 @@ export default function PlayerMatchPage() {
       </Box>
     );
   }
+
+  const matchesToDisplay = getMatchesToDisplay();
 
   return (
     <Fade in={dataReady} timeout={500}>
@@ -345,7 +378,7 @@ export default function PlayerMatchPage() {
         </Typography>
 
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-          Filter players by shared preferences to find your perfect chess friend!
+          Filter players by shared preferences to find your perfect chess friends!
         </Typography>
 
         <Box display="grid" gridTemplateColumns="repeat(auto-fill, minmax(250px, 1fr))" gap={3} my={4}>
@@ -397,91 +430,120 @@ export default function PlayerMatchPage() {
           </Box>
         )}
 
-        <Button 
-          variant="contained" 
-          onClick={findMatch} 
-          disabled={players.length === 0}
-          size="large"
-          sx={{ mb: 3 }}
-        >
-          🔍 Find Your Chess Friend
-        </Button>
+        <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+          <Button 
+            variant="contained" 
+            onClick={findMatches} 
+            disabled={players.length === 0}
+            size="large"
+          >
+            🔍 Find Your Chess Friends
+          </Button>
+
+          {matches.length > 1 && (
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showOnlyOne}
+                  onChange={(e) => setShowOnlyOne(e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="Show only one match"
+            />
+          )}
+        </Box>
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
           {players.length} players available for matching
         </Typography>
 
-        {match ? (
-          <Card sx={{ mt: 4, p: 2, borderRadius: 3, boxShadow: 3 }}>
-            <CardContent>
-              <Typography variant="h5" gutterBottom color="success.main">
-                🎉 Perfect Match Found!
-              </Typography>
-              <Divider sx={{ mb: 3 }} />
-              
-              <Box display="grid" gridTemplateColumns="repeat(auto-fit, minmax(200px, 1fr))" gap={2}>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">Discord Username</Typography>
-                  <Typography variant="h6" sx={{ mb: 1 }}>@{match.username}</Typography>
-                  {match.id && (
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      href={`https://discordlookup.com/user/${match.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      sx={{ mt: 1, fontSize: '0.75rem' }}
-                    >
-                      🔍 View Discord Profile
-                    </Button>
-                  )}
-                </Box>
-                
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">Platform</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>{getDisplayValue(match.pl)}</Typography>
-                </Box>
-                
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">Time Control</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>{getDisplayValue(match.ptc)}</Typography>
-                </Box>
-                
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">Favorite Player</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>{getDisplayValue(match.favplayer)}</Typography>
-                </Box>
-                
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">Favorite Piece</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>{getDisplayValue(match.favpiece)}</Typography>
-                </Box>
-                
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">Favorite Opening</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>{getDisplayValue(match.favopening)}</Typography>
-                </Box>
-                
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">Playing Style</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>{getDisplayValue(match.favstyle)}</Typography>
-                </Box>
-              </Box>
-
-              <Alert severity="success" sx={{ mt: 3 }}>
-                <Typography variant="body2">
-                  <strong>Ready to connect?</strong> Send <strong>@{match.username}</strong> a friend request on Discord and start your chess friendship! 🤝
+        {matchesToDisplay.length > 0 ? (
+          <>
+            <Typography variant="h6" gutterBottom color="success.main" sx={{ mb: 3 }}>
+              🎉 {matchesToDisplay.length === 1 ? 'Perfect Match Found!' : `${matches.length} Matches Found!`}
+              {showOnlyOne && matches.length > 1 && (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  Showing 1 of {matches.length} matches. Turn off "Show only one match" to see all results.
                 </Typography>
-                {match.id && (
-                  <Typography variant="body2" sx={{ mt: 1 }}>
-                    💡 <strong>Tip:</strong> Use the View Discord Profile button above to see their profile picture and verify it is the right person before sending a friend request.
-                  </Typography>
-                )}
-              </Alert>
-            </CardContent>
-          </Card>
+              )}
+            </Typography>
+            
+            <Grid container spacing={3}>
+              {matchesToDisplay.map((match, index) => (
+                <Grid  key={`${match.id}-${index}`}>
+                  <Card sx={{ borderRadius: 3, boxShadow: 3, height: '100%' }}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Box display="flex" alignItems="center" sx={{ mb: 3 }}>
+                        <Avatar
+                          src={getDiscordAvatarUrl(match.id)}
+                          alt={match.username}
+                          sx={{ width: 56, height: 56, mr: 2 }}
+                        />
+                        <Box>
+                          <Typography variant="h6" sx={{ mb: 0.5 }}>
+                            @{match.username}
+                          </Typography>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            href={`https://discordlookup.com/user/${match.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{ fontSize: '0.75rem' }}
+                          >
+                            🔍 View Profile
+                          </Button>
+                        </Box>
+                      </Box>
+
+                      <Divider sx={{ mb: 2 }} />
+                      
+                      <Box display="grid" gap={2}>
+                        <Box>
+                          <Typography variant="subtitle2" color="text.secondary">Platform</Typography>
+                          <Typography variant="body2">{getDisplayValue(match.pl)}</Typography>
+                        </Box>
+                        
+                        <Box>
+                          <Typography variant="subtitle2" color="text.secondary">Time Control</Typography>
+                          <Typography variant="body2">{getDisplayValue(match.ptc)}</Typography>
+                        </Box>
+                        
+                        <Box>
+                          <Typography variant="subtitle2" color="text.secondary">Favorite Player</Typography>
+                          <Typography variant="body2">{getDisplayValue(match.favplayer)}</Typography>
+                        </Box>
+                        
+                        <Box>
+                          <Typography variant="subtitle2" color="text.secondary">Favorite Piece</Typography>
+                          <Typography variant="body2">{getDisplayValue(match.favpiece)}</Typography>
+                        </Box>
+                        
+                        <Box>
+                          <Typography variant="subtitle2" color="text.secondary">Favorite Opening</Typography>
+                          <Typography variant="body2">{getDisplayValue(match.favopening)}</Typography>
+                        </Box>
+                        
+                        <Box>
+                          <Typography variant="subtitle2" color="text.secondary">Playing Style</Typography>
+                          <Typography variant="body2">{getDisplayValue(match.favstyle)}</Typography>
+                        </Box>
+                      </Box>
+
+                      <Alert severity="success" sx={{ mt: 3 }}>
+                        <Typography variant="body2">
+                          Send <strong>@{match.username}</strong> a Discord friend request! 🤝
+                        </Typography>
+                      </Alert>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </>
         ) : (
-          getSelectedSearchPreferences().length > 0 && (
+          hasActiveFilters() && (
             <Alert severity="info" sx={{ mt: 3 }}>
               <Typography variant="body2">
                 No matches found with your current preferences. Try adjusting your selections or check back later as more players join!

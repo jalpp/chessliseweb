@@ -171,7 +171,7 @@ const CommunityList: React.FC = () => {
 
                     {/* Guild ID */}
                     <Typography variant="body2" color="text.secondary">
-                      Guild ID: {community.guildId}
+                      Server ID: {community.guildId}
                     </Typography>
                   </Box>
 
